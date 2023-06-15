@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.studentManagement.mapper.ProfessionMapper">
+
+    <resultMap type="com.design.studentManagement.pojo.Profession" id="ProfessionMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="tuition" column="tuition" jdbcType="INTEGER"/>
+        <result property="stayFee" column="stay_fee" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="ProfessionMap">
+        select
+          *
+        from profession
+        where id = #{id}
+    </select>
+
+    
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into profession(name,tuition,stay_fee)
+        values (#{name},#{tuition},#{stayFee})
+    </insert>
+
+   
+    <!--通过主键修改数据-->
+    <update id="update">
+        update profession
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="tuition != null">
+                tuition = #{tuition},
+            </if>
+            <if test="stayFee != null">
+                stay_fee = #{stayFee},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from profession where id = #{id}
+    </delete>
+    <select id="getList" resultMap="ProfessionMap">
+     select *  from profession
+    </select>
+
+    <select id="getPageListByCondition" resultMap="ProfessionMap">
+        select * from profession
+        <if test="page.key.id != null">
+            where id = #{page.key.id}
+        </if>
+        order by
+        id desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <select id="getPageListCount" resultType="int">
+        select count(id) as count from profession
+        <if test="page.key.id != null">
+            where id = #{page.key.id}
+        </if>
+    </select>
+
+</mapper>

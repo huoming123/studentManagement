@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.studentManagement.mapper.ApplicationMapper">
+
+    <resultMap type="com.design.studentManagement.pojo.Application" id="ApplicationMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="reason" column="reason" jdbcType="VARCHAR"/>
+        <result property="checkBy" column="check_by" jdbcType="VARCHAR"/>
+        <result property="checked" column="checked" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="ApplicationMap">
+        select
+          *
+        from application
+        where id = #{id}
+    </select>
+
+    
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into application(user_id, name, reason,created_at)
+        values (#{userId}, #{name}, #{reason},now())
+    </insert>
+
+   
+    <!--通过主键修改数据-->
+    <update id="update">
+        update application
+        <set>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="checkBy != null and checkBy != ''">
+                check_by = #{checkBy},
+            </if>
+            <if test="reason != null and reason != ''">
+                reason = #{reason},
+            </if>
+            <if test="checked != null">
+                checked = #{checked},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from application where id = #{id}
+    </delete>
+    <!--分页查询-->
+    <select id="getPageListByCondition" resultMap="ApplicationMap">
+
+        select a.*,b.user_name from application a, users b where  a.user_id=b.id and a.created_at is not null
+        <if test="page.key.name != null and page.key.name != ''">
+            and  a.name like '%' #{page.key.name}  '%'
+        </if>
+        <if test="page.key.checked != null ">
+            and a.checked = #{page.key.checked}
+        </if>
+        <if test="page.key.checked == null ">
+            and a.checked  is null
+        </if>
+        <if test="page.key.userId != null ">
+            and a.user_id = #{page.key.userId}
+        </if>
+        order by
+        created_at desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <!--分页查询条数-->
+    <select id="getPageListCount" resultType="int">
+        select count(a.id) as count from application a, users b where  a.user_id=b.id and a.created_at is not null
+        <if test="page.key.name != null and page.key.name != ''">
+            and  a.name like '%' #{page.key.name}  '%'
+        </if>
+        <if test="page.key.checked != null ">
+            and a.checked = #{page.key.checked}
+        </if>
+        <if test="page.key.checked == null ">
+            and a.checked  is null
+        </if>
+        <if test="page.key.userId != null ">
+            and a.user_id = #{page.key.userId}
+        </if>
+    </select>
+
+</mapper>

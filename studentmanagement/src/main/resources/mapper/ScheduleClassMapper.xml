@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.studentManagement.mapper.ScheduleClassMapper">
+
+    <resultMap type="com.design.studentManagement.pojo.ScheduleClass" id="ScheduleClassMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="courseId" column="course_id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="createdBy" column="created_by" jdbcType="VARCHAR"/>
+        <result property="weekDay" column="week_day" jdbcType="VARCHAR"/>
+        <result property="courseName" column="course_name" jdbcType="VARCHAR"/>
+        <result property="professionName" column="profession_name" jdbcType="VARCHAR"/>
+        <result property="startTime" column="start_time" jdbcType="VARCHAR"/>
+        <result property="endTime" column="end_time" jdbcType="VARCHAR"/>
+        <result property="room" column="room" jdbcType="VARCHAR"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="professionId" column="profession_id" jdbcType="INTEGER"/>
+        <result property="classeId" column="classe_id" jdbcType="INTEGER"/>
+        <result property="year" column="year" jdbcType="INTEGER"/>
+        <result property="elective" column="elective" jdbcType="INTEGER"/>
+        <result property="num" column="num" jdbcType="INTEGER"/>
+        <result property="courseNo" column="course_no" jdbcType="INTEGER"/>
+        <result property="term" column="term" jdbcType="VARCHAR"/>
+        <result property="className" column="class_name" jdbcType="VARCHAR"/>
+        <result property="gpa" column="gpa" jdbcType="DOUBLE"/>
+        <result property="score" column="score" jdbcType="DOUBLE"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="ScheduleClassMap">
+        select
+          *
+        from schedule_class
+        where id = #{id}
+    </select>
+
+    
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into schedule_class(course_id, user_id, created_at, created_by, week_day, start_time, end_time,room,classe_id,year,term,elective)
+        values (#{courseId}, #{userId}, now(), #{createdBy}, #{weekDay}, #{startTime}, #{endTime}, #{room},#{classeId},#{year},#{term},#{elective})
+    </insert>
+    <select id="getByTime" resultMap="ScheduleClassMap">
+        select * from schedule_class where week_day=#{weekDay} and start_time=#{startTime} and end_time=#{endTime} and room=#{room}
+        and year =#{year} and term=#{term} and elective=#{elective}
+    </select>
+    <select id="getByTime1" resultMap="ScheduleClassMap">
+        select * from schedule_class where week_day=#{weekDay} and start_time=#{startTime} and end_time=#{endTime} and classe_id=#{classeId}
+          and year =#{year} and term=#{term} and elective=#{elective}
+    </select>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update schedule_class
+        <set>
+            <if test="courseId != null">
+                course_id = #{courseId},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="createdAt != null">
+                created_at = #{createdAt},
+            </if>
+            <if test="createdBy != null and createdBy != ''">
+                created_by = #{createdBy},
+            </if>
+            <if test="weekDay != null and weekDay != ''">
+                week_day = #{weekDay},
+            </if>
+            <if test="startTime != null and startTime != ''">
+                start_time = #{startTime},
+            </if>
+            <if test="endTime != null and endTime != ''">
+                end_time = #{endTime},
+            </if>
+            <if test="room != null and room != ''">
+                room = #{room},
+            </if>
+            <if test="classeId != null">
+                classe_id = #{classeId},
+            </if>
+            <if test="year != null">
+                year = #{year},
+            </if>
+            <if test="elective != null">
+                elective = #{elective},
+            </if>
+            <if test="term != null and term != ''">
+                term = #{term},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from schedule_class where id = #{id}
+    </delete>
+    <!--分页查询-->
+    <select id="getPageListByCondition" resultMap="ScheduleClassMap">
+        select a.* , b.course_name,b.profession_id, c.name as profession_name ,d.user_name, e.class_name
+        from schedule_class a , course b, profession c,users d ,classe e
+        where a.course_id=b.id and b.profession_id= c.id and a.user_id=d.id and a.classe_id=e.id
+        <if test="page.key.classeId != null">
+            and a.classe_id = #{page.key.classeId}
+        </if>
+        <if test="page.key.userId != null">
+            and a.user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.weekDay != null and page.key.weekDay != ''">
+            and a.week_day = #{page.key.weekDay}
+        </if>
+        <if test="page.key.professionId != null ">
+            and b.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.created_at like #{pattern}
+        </if>
+
+        <if test="page.key.term != null and page.key.term != ''">
+            and a.term = #{page.key.term}
+        </if>
+        order by
+        a.created_at desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <!--分页查询条数-->
+    <select id="getPageListCount" resultType="int">
+        select count(a.id) as count  from schedule_class a , course b, profession c,users d ,classe e
+        where a.course_id=b.id and b.profession_id= c.id and a.user_id=d.id and a.classe_id=e.id
+        <if test="page.key.classeId != null">
+            and a.classe_id = #{page.key.classeId}
+        </if>
+        <if test="page.key.userId != null">
+            and a.user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.weekDay != null and page.key.weekDay != ''">
+            and a.week_day = #{page.key.weekDay}
+        </if>
+        <if test="page.key.professionId != null ">
+            and b.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.year != null ">
+            and a.year = #{page.key.year}
+        </if>
+        <if test="page.key.term != null and page.key.term != ''">
+            and a.term = #{page.key.term}
+        </if>
+    </select>
+    <!--分页查询-->
+    <select id="getPageChooseListByCondition" resultMap="ScheduleClassMap">
+        select a.* , b.course_name,b.profession_id,b.course_no,b.num,b.gpa, c.name as profession_name ,d.user_name
+        from schedule_class a , course b, profession c,users d
+        where a.course_id=b.id and b.profession_id= c.id and a.user_id=d.id
+        <if test="page.key.classeId != null">
+            and a.classe_id = #{page.key.classeId}
+        </if>
+        <if test="page.key.userId != null">
+            and a.user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.weekDay != null and page.key.weekDay != ''">
+            and a.week_day = #{page.key.weekDay}
+        </if>
+        <if test="page.key.professionId != null ">
+            and b.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.created_at like #{pattern}
+        </if>
+        <if test="page.key.term != null and page.key.term != ''">
+            and a.term = #{page.key.term}
+        </if>
+        <if test="page.key.elective != null ">
+            and a.elective = #{page.key.elective}
+        </if>
+        order by
+        a.id desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <!--分页查询条数-->
+    <select id="getPageChooseListCount" resultType="int">
+        select count(a.id) as count  from schedule_class a , course b, profession c,users d
+        where a.course_id=b.id and b.profession_id= c.id and a.user_id=d.id
+        <if test="page.key.classeId != null">
+            and a.classe_id = #{page.key.classeId}
+        </if>
+        <if test="page.key.userId != null">
+            and a.user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.weekDay != null and page.key.weekDay != ''">
+            and a.week_day = #{page.key.weekDay}
+        </if>
+        <if test="page.key.professionId != null ">
+            and b.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.year != null ">
+            and a.year = #{page.key.year}
+        </if>
+        <if test="page.key.term != null and page.key.term != ''">
+            and a.term = #{page.key.term}
+        </if>
+        <if test="page.key.elective != null ">
+            and a.elective = #{page.key.elective}
+        </if>
+    </select>
+    <select id="getById" resultMap="ScheduleClassMap">
+        select a.* , b.course_name,b.profession_id,b.course_no,b.num,b.gpa, c.name as profession_name ,d.user_name
+        from schedule_class a , course b, profession c,users d
+        where a.course_id=b.id and b.profession_id= c.id and a.user_id=d.id and a.id=#{scheduleClassId}
+    </select>
+    <select id="getCourseByUserId" resultMap="ScheduleClassMap">
+        select a.* , b.course_name,b.profession_id, c.name as profession_name ,d.user_name, e.class_name
+        from schedule_class a , course b, profession c,users d ,classe e
+        where a.course_id=b.id and b.profession_id= c.id and a.user_id=d.id and a.classe_id=e.id
+        <if test="page.key.index !=null and  page.key.index  !=''">
+            and a.elective=#{page.key.index}
+        </if>
+        <if test="page.key.professionId !=null">
+            and b.profession_id=#{page.key.professionId}
+        </if>
+        <if test="page.key.classeId != null">
+            and a.classe_id=#{page.key.classeId}
+        </if>
+        <if test="page.key.userId != null ">
+            and a.user_id=#{page.key.userId}
+        </if>
+        <if test="page.key.year != null and page.key.index =='1'">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.created_at like #{pattern}
+        </if>
+        <if test="page.key.year != null and page.key.index =='0'">
+            and a.year = #{page.key.year}
+        </if>
+        <if test="page.key.term != null and page.key.term != ''">
+            and a.term = #{page.key.term}
+        </if>
+    </select>
+    <select id="getStudentList" resultMap="ScheduleClassMap">
+         select a.user_name,a.id as user_id,b.class_name,date_format(a.start_at, '%Y') as year
+        from users a, classe b
+        where a.classe_id=b.id and a.classe_id=#{classeId} and a.role ='student'
+        <if test="year != null ">
+            <bind name="pattern" value="'%' + year + '%'" />
+            and a.start_at like #{pattern}
+        </if>
+    </select>
+    <select id="getScoreList" resultMap="ScheduleClassMap">
+        select a.user_name,a.id as user_id,b.class_name,date_format(a.start_at, '%Y') as year, c.score
+        from users a, classe b, score c
+        where a.classe_id=b.id and a.classe_id=#{classeId} and a.role ='student'
+        and b.id=c.classe_id and  c.course_id=#{courseId}
+        <if test="year != null ">
+            <bind name="pattern" value="'%' + year + '%'" />
+            and a.start_at like #{pattern}
+        </if>
+    </select>
+    <select id="queryByScheduleClassId" resultMap="ScheduleClassMap">
+        select
+        a.*,b.classe_id
+        from choose_course a, users b
+        where a.user_id =b.id
+        and a.schedule_class_id = #{id}
+    </select>
+</mapper>

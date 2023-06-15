@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.studentManagement.mapper.UsersMapper">
+
+    <resultMap type="com.design.studentManagement.pojo.Users" id="UsersMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="role" column="role" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="address" column="address" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="startAt" column="start_at" jdbcType="TIMESTAMP"/>
+        <result property="createdBy" column="created_by" jdbcType="VARCHAR"/>
+        <result property="userNo" column="user_no" jdbcType="VARCHAR"/>
+        <result property="cardId" column="card_id" jdbcType="VARCHAR"/>
+        <result property="age" column="age" jdbcType="INTEGER"/>
+        <result property="sex" column="sex" jdbcType="VARCHAR"/>
+        <result property="telephone" column="telephone" jdbcType="VARCHAR"/>
+        <result property="image" column="image" jdbcType="VARCHAR"/>
+        <result property="nation" column="nation" jdbcType="VARCHAR"/>
+        <result property="birthday" column="birthday" jdbcType="TIMESTAMP"/>
+        <result property="nativePlace" column="native_place" jdbcType="VARCHAR"/>
+        <result property="maritalStatus" column="marital_status" jdbcType="VARCHAR"/>
+        <result property="political" column="political" jdbcType="VARCHAR"/>
+        <result property="leaveAt" column="leave_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedBy" column="updated_by" jdbcType="VARCHAR"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+        <result property="depart" column="depart" jdbcType="VARCHAR"/>
+        <result property="rank" column="rank" jdbcType="VARCHAR"/>
+        <result property="count" column="count" jdbcType="INTEGER"/>
+        <result property="isGraduate" column="is_graduate" jdbcType="INTEGER"/>
+        <result property="classeId" column="classe_id" jdbcType="INTEGER"/>
+        <result property="professionName" column="profession_name" jdbcType="VARCHAR"/>
+        <result property="className" column="class_name" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="getByCardId" resultMap="UsersMap">
+        select * from users where card_id = #{cardId}
+    </select>
+    <!--查询单个-->
+    <select id="queryById" resultMap="UsersMap">
+        select
+       *
+        from users
+        where id = #{id}
+    </select>
+    <!--根据学号或者教师编号跟角色获取数据-->
+    <select id="getByUserNoAndRole" resultMap="UsersMap">
+        select
+       *
+        from users
+        where user_no = #{userNo} and  role =#{role}
+    </select>
+    <select id="getPageCountListByCondition" resultMap="UsersMap">
+        select  date_format(a.start_at, '%Y') as year,
+        b.name as profession_name,count(a.id) as count from users a , profession b
+        where  a.profession_id=b.id and created_at is not null
+        <if test="page.key.professionId != null">
+            and a.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.start_at like #{pattern}
+        </if>
+        GROUP BY year desc, b.name
+    </select>
+
+    <select id="getPageListByCondition" resultMap="UsersMap">
+        <if test="page.key.absentee != null and page.key.absentee == 1">
+            select a.*,b.name as profession_name, date_format(a.start_at, '%Y') as year,c.class_name
+
+            from users a , profession b, classe c
+            where  a.profession_id=b.id  and a.classe_id = c.id and a.created_at is not null
+        </if>
+        <if test="page.key.absentee == null ">
+            select a.*,b.name as profession_name, date_format(a.start_at, '%Y') as year
+            from users a , profession b
+            where  a.profession_id= b.id  and a.created_at is not null
+        </if>
+        <if test="page.key.userName != null and page.key.userName != ''">
+            and  a.user_name like '%' #{page.key.userName}  '%'
+        </if>
+        <if test="page.key.userNo != null and page.key.userNo != ''">
+            and a.user_no = #{page.key.userNo}
+        </if>
+        <if test="page.key.role != null and page.key.role != ''">
+            and a.role = #{page.key.role}
+        </if>
+        <if test="page.key.isLeave == 1"> <!--1为离职-->
+            and a.leave_at is not null
+        </if>
+        <if test="page.key.isLeave == 0"><!--0为未离职-->
+            and a.leave_at is  null
+        </if>
+        <if test="page.key.professionId != null and page.key.professionId != ''">
+            and a.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.isNew != null ">
+            and a.classe_id is null
+        </if>
+        <if test="page.key.isGraduate != null ">
+            and a.is_graduate = #{page.key.isGraduate}
+        </if>
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.start_at like #{pattern}
+        </if>
+        order by
+        created_at desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <select id="getPageListCount" resultType="int">
+        <if test="page.key.absentee != null and page.key.absentee == 1">
+            select count(a.id) as count
+
+            from users a , profession b, classe c
+            where  a.profession_id=b.id  and a.classe_id = c.id and a.created_at is not null
+        </if>
+        <if test="page.key.absentee == null ">
+            select count(a.id) as count
+            from users a , profession b
+            where  a.profession_id= b.id  and a.created_at is not null
+        </if>
+        <if test="page.key.userName != null and page.key.userName != ''">
+            and  a.user_name like '%' #{page.key.userName}  '%'
+        </if>
+        <if test="page.key.userNo != null and page.key.userNo != ''">
+            and a.user_no = #{page.key.userNo}
+        </if>
+        <if test="page.key.role != null and page.key.role != ''">
+            and a.role = #{page.key.role}
+        </if>
+        <if test="page.key.isLeave == 1"> <!--1为离职-->
+            and a.leave_at is not null
+        </if>
+        <if test="page.key.isLeave == 0"><!--0为未离职-->
+            and a.leave_at is  null
+        </if>
+        <if test="page.key.professionId != null and page.key.professionId != ''">
+            and a.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.isNew != null ">
+            and a.classe_id is null
+        </if>
+        <if test="page.key.isGraduate != null ">
+            and a.is_graduate = #{page.key.isGraduate}
+        </if>
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.start_at like #{pattern}
+        </if>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into users(user_name, role, password, address, created_at, created_by, user_no, card_id, age, sex, telephone, image, nation, birthday, native_place, marital_status, political, leave_at, updated_by, updated_at, depart, rank,profession_id,start_at,is_graduate)
+        values (#{userName}, #{role}, #{password}, #{address}, now(), #{createdBy}, #{userNo}, #{cardId}, #{age}, #{sex}, #{telephone}, #{image}, #{nation}, #{birthday}, #{nativePlace}, #{maritalStatus}, #{political}, #{leaveAt}, #{updatedBy}, #{updatedAt}, #{depart}, #{rank},#{professionId},#{startAt},#{isGraduate})
+    </insert>
+
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update users
+        <set>
+            <if test="userName != null and userName != ''">
+                user_name = #{userName},
+            </if>
+            <if test="role != null and role != ''">
+                role = #{role},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="address != null and address != ''">
+                address = #{address},
+            </if>
+            <if test="createdAt != null">
+                created_at = #{createdAt},
+            </if>
+            <if test="createdBy != null and createdBy != ''">
+                created_by = #{createdBy},
+            </if>
+            <if test="userNo != null">
+                user_no = #{userNo},
+            </if>
+            <if test="cardId != null and cardId != ''">
+                card_id = #{cardId},
+            </if>
+            <if test="age != null">
+                age = #{age},
+            </if>
+            <if test="sex != null and sex != ''">
+                sex = #{sex},
+            </if>
+            <if test="telephone != null and telephone != ''">
+                telephone = #{telephone},
+            </if>
+            <if test="image != null and image != ''">
+                image = #{image},
+            </if>
+            <if test="nation != null and nation != ''">
+                nation = #{nation},
+            </if>
+            <if test="birthday != null">
+                birthday = #{birthday},
+            </if>
+            <if test="nativePlace != null and nativePlace != ''">
+                native_place = #{nativePlace},
+            </if>
+            <if test="maritalStatus != null and maritalStatus != ''">
+                marital_status = #{maritalStatus},
+            </if>
+            <if test="political != null and political != ''">
+                political = #{political},
+            </if>
+            <if test="classeId != null">
+                classe_id = #{classeId},
+            </if>
+            <if test="leaveAt != null">
+                leave_at = #{leaveAt},
+            </if>
+            <if test="updatedBy != null and updatedBy != ''">
+                updated_by = #{updatedBy},
+            </if>
+            <if test="depart != null and depart != ''">
+                depart = #{depart},
+            </if>
+            <if test="rank != null and rank != ''">
+                rank = #{rank},
+            </if>
+             updated_at = now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from users where id = #{id}
+    </delete>
+    <select id="getAllStudentsList"  resultMap="UsersMap">
+        select *,date_format(start_at, '%Y') as year from users where is_graduate = 0 and classe_id is not null
+    </select>
+    <select id="getTeachList"  resultMap="UsersMap">
+        select * from users where role = 'teacher' and  leave_at is null
+    </select>
+    <update id="updateClass">
+        update users set classe_id =#{classeId} where id =#{id}
+    </update>
+    <select id="getAbsenteeListByCondition" resultMap="UsersMap">
+        select  date_format(a.start_at, '%Y') as year,
+        b.name as profession_name,count(a.id) as count,c.class_name from users a , profession b, classe c
+        where  a.profession_id=b.id and a.classe_id = c.id and a.created_at is not null and a.classe_id is not null
+        <if test="page.key.professionId != null">
+            and a.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.classeId != null">
+            and a.classe_id = #{page.key.classeId}
+        </if>
+        <if test="page.key.isGraduate != null">
+            and a.is_graduate = #{page.key.isGraduate}
+        </if>
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.start_at like #{pattern}
+        </if>
+        GROUP BY year desc, b.name, c.class_name
+    </select>
+    <!--<select id="getAbsenteeCountByCondition" resultType="int">-->
+        <!--select count(a.id) as count-->
+        <!--from users a , profession b, classe c-->
+        <!--where  a.profession_id=b.id and a.classe_id = c.id and a.created_at is not null and a.classe_id is not null-->
+        <!--<if test="page.key.professionId != null">-->
+            <!--and a.profession_id = #{page.key.professionId}-->
+        <!--</if>-->
+        <!--<if test="page.key.classeId != null">-->
+            <!--and a.classe_id = #{page.key.classeId}-->
+        <!--</if>-->
+        <!--<if test="page.key.isGraduate != null">-->
+            <!--and a.is_graduate = #{page.key.isGraduate}-->
+        <!--</if>-->
+        <!--<if test="page.key.year != null ">-->
+            <!--<bind name="pattern" value="'%' + page.key.year + '%'" />-->
+            <!--and a.start_at like #{pattern}-->
+        <!--</if>-->
+    <!--</select>-->
+  <update id="updatePassword">
+      update users set password=#{password} where id =#{id}
+  </update>
+</mapper>

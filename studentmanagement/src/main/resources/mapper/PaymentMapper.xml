@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.studentManagement.mapper.PaymentMapper">
+
+    <resultMap type="com.design.studentManagement.pojo.Payment" id="PaymentMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="isPay" column="is_pay" jdbcType="INTEGER"/>
+        <result property="year" column="year" jdbcType="INTEGER"/>
+        <result property="yearClass" column="year_class" jdbcType="INTEGER"/>
+        <result property="professionId" column="profession_id" jdbcType="INTEGER"/>
+        <result property="classeId" column="classe_id" jdbcType="INTEGER"/>
+        <result property="year" column="year" jdbcType="INTEGER"/>
+        <result property="professionName" column="profession_name" jdbcType="VARCHAR"/>
+        <result property="className" column="class_name" jdbcType="VARCHAR"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="tuition" column="tuition" jdbcType="INTEGER"/>
+        <result property="stayFee" column="stay_fee" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="PaymentMap">
+           select  a.*,c.* from payment a ,users b, profession c where a.user_id=b.id and b.profession_id=c.id and a.id=#{id}
+    </select>
+
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into payment(user_id, is_pay, year,profession_id,classe_id,year_class)
+        values (#{userId}, #{isPay}, #{year},#{professionId},#{classeId},#{yearClass})
+    </insert>
+    <!--分页查询-->
+    <select id="getTotalListByCondition" resultMap="PaymentMap">
+        select count(a.id) as count,a.* from payment a  where a.year is not null
+        <if test="page.key.year != null">
+            and  a.year = #{page.key.year}
+        </if>
+        <if test="page.key.professionId != null">
+            and  a.profession_id = #{page.key.professionId}
+        </if>
+        <if test="page.key.classeId != null">
+            and  a.class_id = #{page.key.classeId}
+        </if>
+        GROUP BY a.year desc,a.year_class desc,a.profession_id,a.classe_id
+    </select>
+
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update payment
+        <set>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="isPay != null">
+                is_pay = #{isPay},
+            </if>
+            <if test="year != null">
+                year = #{year},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from payment where id = #{id}
+    </delete>
+    <select id="queryByUserId" resultMap="PaymentMap">
+        select  a.*,c.* from payment a ,users b, profession c where a.user_id=b.id and b.profession_id=c.id and a.user_id=#{userId}
+    </select>
+    <update id="pay">
+        update payment set is_pay= 1 where user_id=#{userId} and year=#{year}
+    </update>
+    <select id="getTotalFee" resultMap="PaymentMap">
+        select * from payment where profession_id=#{professionId}
+        and year=#{year} and classe_id=#{classeId}
+        and year_class =#{yearClass}
+    </select>
+    <select id="getHavedTotalFee" resultMap="PaymentMap">
+        select * from payment where profession_id=#{professionId}
+        and year=#{year} and classe_id=#{classeId}
+        and year_class =#{yearClass} and is_pay =1
+    </select>
+    <select id="getUnhavedTotalFee" resultMap="PaymentMap">
+        select * from payment where profession_id=#{professionId}
+        and year=#{year} and classe_id=#{classeId}
+        and year_class =#{yearClass} and is_pay =0
+    </select>
+</mapper>
+

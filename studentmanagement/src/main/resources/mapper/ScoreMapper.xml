@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.studentManagement.mapper.ScoreMapper">
+
+    <resultMap type="com.design.studentManagement.pojo.Score" id="ScoreMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="className" column="class_name" jdbcType="VARCHAR"/>
+        <result property="courseName" column="course_name" jdbcType="VARCHAR"/>
+        <result property="classeId" column="classe_id" jdbcType="INTEGER"/>
+        <result property="score" column="score" jdbcType="NUMERIC"/>
+        <result property="year" column="year" jdbcType="INTEGER"/>
+        <result property="term" column="term" jdbcType="VARCHAR"/>
+        <result property="courseId" column="course_id" jdbcType="INTEGER"/>
+        <result property="elective" column="elective" jdbcType="INTEGER"/>
+        <result property="createdBy" column="created_by" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="ScoreMap">
+        select
+        *
+        from score
+        where id = #{id}
+    </select>
+    <select id="getScoreList" resultMap="ScoreMap">
+        select
+        *
+        from score
+        where year =#{year} and term =#{term} and course_id=#{courseId} and classe_id=#{classeId} and elective=0
+    </select>
+    <select id="queryByScheduleClassId" resultMap="ScoreMap">
+        select
+        a.*,b.classe_id
+        from choose_course a, users b
+        where a.user_id =b.id
+        and a.schedule_class_id = #{id}
+    </select>
+    <select id="getStudentScoreList" resultMap="ScoreMap">
+        select
+        *
+        from  score
+        where user_id = #{page.key.userId} and term=#{page.key.term}
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and created_at like #{pattern}
+        </if>
+    </select>
+    <select id="getScoreList1" resultMap="ScoreMap">
+       select
+        *
+        from score
+        where year =#{year} and term =#{term} and course_id=#{courseId} and elective=1
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into score(user_id, classe_id, score, year, term, course_id,created_at,created_by,elective)
+        values (#{userId}, #{classeId}, #{score}, #{year}, #{term}, #{courseId},now(),#{createdBy},#{elective})
+    </insert>
+     <!--分页查询-->
+      <select id="getPageListByCondition" resultMap="ScoreMap">
+       <!-- <if test="page.key.userName != null and page.key.userName != ''">
+            and  a.user_name like '%' #{page.key.userName}  '%'
+        </if>
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.created_at like #{pattern}
+        </if>-->
+        select *  from score
+        order by
+        created_at desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+     <!--分页查询条数-->
+    <select id="getPageListCount" resultType="int">
+        select count(id) as count from score   
+    </select>
+
+   
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update score
+        <set>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="classeId != null">
+                classe_id = #{classeId},
+            </if>
+            <if test="score != null">
+                score = #{score},
+            </if>
+            <if test="year != null">
+                year = #{year},
+            </if>
+            <if test="term != null and term != ''">
+                term = #{term},
+            </if>
+            <if test="courseId != null">
+                course_id = #{courseId},
+            </if>
+            <if test="createdBy != null and createdBy != ''">
+                created_by = #{createdBy},
+            </if>
+            created_at=now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from score where id = #{id}
+    </delete>
+
+</mapper>
+

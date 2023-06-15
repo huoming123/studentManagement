@@ -1,0 +1,62 @@
+package com.design.studentManagement.service;
+
+import com.design.studentManagement.dto.Page;
+import com.design.studentManagement.pojo.ScheduleClass;
+import com.design.studentManagement.pojo.Score;
+import com.design.studentManagement.pojo.res.RestFulBean;
+import jxl.write.WriteException;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * (ScheduleClass)表服务接口
+ *
+ * @author makejava
+ * @since 2022-08-10 15:31:35
+ */
+public interface ScheduleClassService {
+
+    /**
+     * 通过ID查询单条数据
+     *
+     * @param id 主键
+     * @return 实例对象
+     */
+    RestFulBean<ScheduleClass> queryById(Integer id);
+
+
+    /**
+     * 新增数据
+     *
+     * @param scheduleClass 实例对象
+     * @return 实例对象
+     */
+    RestFulBean<String> insert(ScheduleClass scheduleClass);
+
+    /**
+     * 修改数据
+     *
+     * @param scheduleClass 实例对象
+     * @return 实例对象
+     */
+   RestFulBean<String> update(ScheduleClass scheduleClass);
+
+    /**
+     * 通过主键删除数据
+     *
+     * @param id 主键
+     * @return 是否成功
+     */
+    RestFulBean<String> deleteById(Integer id);
+
+    RestFulBean<Map> getList(Page<ScheduleClass> page) throws Exception;
+
+    RestFulBean<Map> getChooseList(Page<ScheduleClass> page) throws Exception;
+
+    RestFulBean<Map> getCourseByUserId(Page<ScheduleClass> page) throws Exception;
+
+    RestFulBean<List<Score>> getStudentList(ScheduleClass scheduleClass);
+
+}
